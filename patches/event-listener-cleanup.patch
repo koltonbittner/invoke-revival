@@ -1,0 +1,13 @@
+--- a/rtsp.c
++++ b/rtsp.c
+@@ -4055,6 +4055,10 @@
+       free(conn->rtp_event_thread);
+       conn->rtp_event_thread = NULL;
+     }
++    /* The event worker owns the accepted channel, not its listening socket.
++       Close the listener after joining, including cancellation during accept. */
++    if (conn->event_socket > 0)
++      safe_socket_close(&conn->event_socket);
+     conn->ap2_event_receiver_exited = 0;
+     debug(3, "Connection %d: %s event thread deleted.", conn->connection_number,
+           get_category_string(conn->airplay_stream_category));

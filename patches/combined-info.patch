@@ -1,0 +1,20 @@
+--- a/rtsp.c
++++ b/rtsp.c
+@@ -3046,6 +3046,17 @@
+   }
+ 
+   if (resp->respcode == 200) {
++    /* New senders combine GET /info with the initial control SETUP. Return the
++       same capabilities under "info", retaining all normal setup fields. */
++    plist_t combined = plist_dict_get_item(messagePlist, "combinedGetInfoWithControlSetup");
++    uint8_t wants_info = 0;
++    if (combined && plist_get_node_type(combined) == PLIST_BOOLEAN)
++      plist_get_bool_val(combined, &wants_info);
++    if (!streams && wants_info) {
++      plist_t info = generateInfoPlist(conn);
++      if (info)
++        plist_dict_set_item(setupResponsePlist, "info", info);
++    }
+     plist_to_bin(setupResponsePlist, &resp->content, &resp->contentlength);
+     plist_free(setupResponsePlist);
+     msg_add_header(resp, "Content-Type", "application/x-apple-binary-plist");
